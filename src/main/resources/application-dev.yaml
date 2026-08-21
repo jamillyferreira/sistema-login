@@ -1,0 +1,14 @@
+# application-dev.yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: true
+server:
+  port: 8080
+logging:
+  level:
+    org.flywaydb: INFO
+    org.hibernate.SQL: DEBUG
