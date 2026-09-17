@@ -1,9 +1,11 @@
 package com.ferreiradev.sistema_login.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -32,24 +35,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 Instant.now()
         );
 
+        log.warn("Conflito de email: {}", ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(InvalidCredentialException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCredentialException(
-            InvalidCredentialException ex, WebRequest request) {
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(
+           BadCredentialsException ex, WebRequest request) {
 
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
 
         ErrorResponse response = new ErrorResponse(
-                "about: blank",
+                "about:blank",
                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                 HttpStatus.UNAUTHORIZED.value(),
-                ex.getMessage(),
+                "E-mail ou Senha inválidos",
                 path,
                 Instant.now()
         );
 
+        log.warn("Tentativa de login com credenciais inválidas");
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
@@ -72,6 +77,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 Instant.now()
         );
 
+        log.warn("Campos invalidos: {}", ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 }
