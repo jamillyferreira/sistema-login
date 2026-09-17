@@ -80,4 +80,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("Campos invalidos: {}", ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshTokenException(
+            InvalidRefreshTokenException ex, WebRequest request) {
+
+        String path = ((ServletWebRequest) request).getRequest().getRequestURI();
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "about:blank",
+                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                HttpStatus.UNAUTHORIZED.value(),
+                ex.getMessage(),
+                path,
+                Instant.now()
+        );
+
+        log.warn("Erro de refresh token: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+
+    }
 }
