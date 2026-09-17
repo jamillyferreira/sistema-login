@@ -1,6 +1,6 @@
     package com.ferreiradev.sistema_login.controller;
 
-    import com.ferreiradev.sistema_login.dtos.response.RegisterResponseDTO;
+    import com.ferreiradev.sistema_login.dtos.response.UserResponse;
     import com.ferreiradev.sistema_login.mapper.AuthMapper;
     import com.ferreiradev.sistema_login.model.User;
     import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@
         private final AuthMapper authMapper;
 
         @GetMapping("/me") // Acessivel somente para usuario logado
-        public ResponseEntity<RegisterResponseDTO> me(@AuthenticationPrincipal User user) {
+        public ResponseEntity<UserResponse> me(@AuthenticationPrincipal User user) {
             return ResponseEntity.ok(authMapper.toRegisterResponseDTO(user));
         }
 

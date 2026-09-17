@@ -1,9 +1,9 @@
 package com.ferreiradev.sistema_login.service;
 
-import com.ferreiradev.sistema_login.dtos.request.LoginRequestDTO;
-import com.ferreiradev.sistema_login.dtos.request.RegisterRequestDTO;
-import com.ferreiradev.sistema_login.dtos.response.LoginResponseDTO;
-import com.ferreiradev.sistema_login.dtos.response.RegisterResponseDTO;
+import com.ferreiradev.sistema_login.dtos.request.LoginRequest;
+import com.ferreiradev.sistema_login.dtos.request.RegisterRequest;
+import com.ferreiradev.sistema_login.dtos.response.UserResponse;
+import com.ferreiradev.sistema_login.dtos.response.TokenResponse;
 import com.ferreiradev.sistema_login.exception.EmailAlreadyExistsException;
 import com.ferreiradev.sistema_login.mapper.AuthMapper;
 import com.ferreiradev.sistema_login.model.User;
@@ -27,8 +27,9 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthMapper authMapper;
+    private final RefreshTokenService refreshTokenService;
 
-    public RegisterResponseDTO register(RegisterRequestDTO request) {
+    public UserResponse register(RegisterRequest request) {
         log.info("Iniciando tentativa de registro: email={}", request.email());
         if (userRepository.existsByEmail(request.email())) {
             log.warn("Tentativa de registro com email já cadastrado: {}", request.email());
@@ -44,7 +45,7 @@ public class AuthService {
         return authMapper.toRegisterResponseDTO(savedUser);
     }
 
-    public LoginResponseDTO login(LoginRequestDTO request) {
+    public TokenResponse login(LoginRequest request) {
         log.info("Tentativa de login: email={}", request.email());
 
        Authentication authentication = authenticationManager.authenticate(
@@ -58,10 +59,11 @@ public class AuthService {
                });
 
        String token = jwtService.generateToken(user);
+       String refreshToken = refreshTokenService.generateRefreshToken(user);
        long expiresIn = jwtService.getExpirationInSeconds();
 
        log.info("Login bem-sucedido: id={}, username={}", user.getId(), user.getEmail());
-       return authMapper.toLoginResponseDTO(token, user, expiresIn);
+       return authMapper.toTokenResponse(token, refreshToken, expiresIn);
     }
 
 }

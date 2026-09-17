@@ -7,9 +7,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Builder
-public record RegisterResponseDTO(
+public record UserResponse(
         UUID id,
+
         String name,
+
         String email,
 
         @JsonProperty("created_at")

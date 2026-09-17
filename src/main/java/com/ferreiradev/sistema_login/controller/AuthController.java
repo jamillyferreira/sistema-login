@@ -1,9 +1,9 @@
 package com.ferreiradev.sistema_login.controller;
 
-import com.ferreiradev.sistema_login.dtos.request.LoginRequestDTO;
-import com.ferreiradev.sistema_login.dtos.request.RegisterRequestDTO;
-import com.ferreiradev.sistema_login.dtos.response.LoginResponseDTO;
-import com.ferreiradev.sistema_login.dtos.response.RegisterResponseDTO;
+import com.ferreiradev.sistema_login.dtos.request.LoginRequest;
+import com.ferreiradev.sistema_login.dtos.request.RegisterRequest;
+import com.ferreiradev.sistema_login.dtos.response.UserResponse;
+import com.ferreiradev.sistema_login.dtos.response.TokenResponse;
 import com.ferreiradev.sistema_login.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,14 +21,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDTO> register(@RequestBody @Valid RegisterRequestDTO request) {
-        RegisterResponseDTO response = authService.register(request);
+    public ResponseEntity<UserResponse> register(@RequestBody @Valid RegisterRequest request) {
+        UserResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO request) {
-        LoginResponseDTO response = authService.login(request);
+    public ResponseEntity<TokenResponse> login(@RequestBody @Valid LoginRequest request) {
+        TokenResponse response = authService.login(request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

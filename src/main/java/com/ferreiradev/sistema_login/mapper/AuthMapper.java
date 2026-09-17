@@ -1,15 +1,15 @@
 package com.ferreiradev.sistema_login.mapper;
 
-import com.ferreiradev.sistema_login.dtos.request.RegisterRequestDTO;
-import com.ferreiradev.sistema_login.dtos.response.LoginResponseDTO;
-import com.ferreiradev.sistema_login.dtos.response.RegisterResponseDTO;
+import com.ferreiradev.sistema_login.dtos.request.RegisterRequest;
+import com.ferreiradev.sistema_login.dtos.response.UserResponse;
+import com.ferreiradev.sistema_login.dtos.response.TokenResponse;
 import com.ferreiradev.sistema_login.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AuthMapper {
 
-    public User toEntity(RegisterRequestDTO request) {
+    public User toEntity(RegisterRequest request) {
         return User.builder()
                 .name(request.name())
                 .email(request.email())
@@ -17,8 +17,8 @@ public class AuthMapper {
                 .build();
     }
 
-    public RegisterResponseDTO toRegisterResponseDTO(User user) {
-        return RegisterResponseDTO.builder()
+    public UserResponse toRegisterResponseDTO(User user) {
+        return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
@@ -26,12 +26,13 @@ public class AuthMapper {
                 .build();
     }
 
-    public LoginResponseDTO toLoginResponseDTO(String token, User user, long expiresIn) {
-        return LoginResponseDTO.builder()
-                .accessToken(token)
-                .name(user.getName())
-                .email(user.getEmail())
+    public TokenResponse toTokenResponse(String accessToken, String refreshToken, long expiresIn) {
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
                 .expiresIn(expiresIn)
                 .build();
+
     }
 }
