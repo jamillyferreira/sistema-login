@@ -28,7 +28,7 @@ public class AuthMapper {
 
     public LoginResponseDTO toLoginResponseDTO(String token, User user, long expiresIn) {
         return LoginResponseDTO.builder()
-                .token(token)
+                .accessToken(token)
                 .name(user.getName())
                 .email(user.getEmail())
                 .expiresIn(expiresIn)
