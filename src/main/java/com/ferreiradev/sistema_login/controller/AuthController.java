@@ -1,6 +1,7 @@
 package com.ferreiradev.sistema_login.controller;
 
 import com.ferreiradev.sistema_login.dtos.request.LoginRequest;
+import com.ferreiradev.sistema_login.dtos.request.RefreshRequest;
 import com.ferreiradev.sistema_login.dtos.request.RegisterRequest;
 import com.ferreiradev.sistema_login.dtos.response.UserResponse;
 import com.ferreiradev.sistema_login.dtos.response.TokenResponse;
@@ -30,6 +31,18 @@ public class AuthController {
     public ResponseEntity<TokenResponse> login(@RequestBody @Valid LoginRequest request) {
         TokenResponse response = authService.login(request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refresh(@RequestBody @Valid RefreshRequest request) {
+        TokenResponse response = authService.refresh(request);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout (@RequestBody @Valid RefreshRequest request) {
+        authService.logout(request);
+        return ResponseEntity.noContent().build();
     }
 
 
