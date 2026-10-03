@@ -1,6 +1,5 @@
-package com.ferreiradev.sistema_login.config;
+package com.ferreiradev.sistema_login.security;
 
-import com.ferreiradev.sistema_login.security.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
