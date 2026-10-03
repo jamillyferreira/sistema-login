@@ -1,9 +1,7 @@
 package com.ferreiradev.sistema_login.security;
 
-import com.ferreiradev.sistema_login.config.JwtAuthFilter;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.http.Method;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
