@@ -12,10 +12,28 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
   flyway:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: true
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 600000 # Access token,  10min em ms
+  refresh-expiration: 604800000 # Refresh token,  7 dias em ms
 logging:
   level:
     root: INFO
