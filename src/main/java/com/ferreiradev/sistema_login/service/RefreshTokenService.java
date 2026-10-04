@@ -14,6 +14,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -44,27 +45,29 @@ public class RefreshTokenService {
 
     // validar refresh token
     public RefreshToken validateRefreshToken(String rawToken) {
-        String hashedToken = hashToken(rawToken);
-
-        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(hashedToken)
-                .orElseThrow(() -> {
-                    log.error("Refresh token inválido");
-                    return new InvalidRefreshTokenException("Refresh token inválido");
-                });
-
-        if (refreshToken.isRevoked()) throw new InvalidRefreshTokenException("Refresh token revogado");
-
-        if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
-            throw new InvalidRefreshTokenException("Refresh token expirado");
-        }
-
-        return refreshToken;
+        return findValidRefreshToken(rawToken).orElseThrow(() -> {
+            log.warn("Refresh token inválido ou expirado");
+            return new InvalidRefreshTokenException("Refresh token inválido ou expirado");
+        });
     }
 
     // revogar refresh token
     public void revokeRefreshToken(RefreshToken refreshToken) {
         refreshToken.setRevoked(true);
         refreshTokenRepository.save(refreshToken);
+    }
+
+    public int revokeAllForUser(User user) {
+        int revoked = refreshTokenRepository.revokeAllByUserId(user.getId());
+        log.info("Regovados {} refresh tokens do usuário {}", revoked, user.getId());
+        return revoked;
+    }
+
+    public Optional<RefreshToken> findValidRefreshToken(String rawToken) {
+        String hashedToken = hashToken(rawToken);
+        return refreshTokenRepository.findByTokenHash(hashedToken)
+                .filter(t -> !t.isRevoked())
+                .filter(t -> t.getExpiresAt().isAfter(Instant.now()));
     }
 
     // criar token aleatorio
@@ -82,6 +85,5 @@ public class RefreshTokenService {
             throw new IllegalStateException("Algoritmo de hash não encontrado", e);
         }
     }
-
 
 }

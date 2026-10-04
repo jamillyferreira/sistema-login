@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Slf4j
 @Service
 @Transactional
@@ -32,6 +33,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthMapper authMapper;
     private final RefreshTokenService refreshTokenService;
+
 
     public UserResponse register(RegisterRequest request) {
         log.info("Iniciando tentativa de registro: email={}", request.email());
@@ -52,24 +54,23 @@ public class AuthService {
     public TokenResponse login(LoginRequest request) {
         log.info("Tentativa de login: email={}", request.email());
 
-       Authentication authentication = authenticationManager.authenticate(
-               new UsernamePasswordAuthenticationToken(request.email(), request.password())
-       );
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
+        );
 
         User user = userRepository.findByEmail(authentication.getName())
-               .orElseThrow(() -> {
-                   log.error("Usuário autenticado mas não encontrado no banco: {}", authentication.getName());
-                   return new UsernameNotFoundException("Usuário não encontrado no banco");
-               });
+                .orElseThrow(() -> {
+                    log.error("Usuário autenticado mas não encontrado no banco: {}", authentication.getName());
+                    return new UsernameNotFoundException("Usuário não encontrado no banco");
+                });
 
-       String token = jwtService.generateToken(user);
-       String refreshToken = refreshTokenService.generateRefreshToken(user);
-       long expiresIn = jwtService.getExpirationInSeconds();
+        String token = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.generateRefreshToken(user);
+        long expiresIn = jwtService.getExpirationInSeconds();
 
-       log.info("Login bem-sucedido: id={}, username={}", user.getId(), user.getEmail());
-       return authMapper.toTokenResponse(token, refreshToken, expiresIn);
+        log.info("Login bem-sucedido: id={}, username={}", user.getId(), user.getEmail());
+        return authMapper.toTokenResponse(token, refreshToken, expiresIn);
     }
-
 
     public TokenResponse refresh(RefreshRequest request) {
         log.info("Tentativa de refresh token");
@@ -92,14 +93,11 @@ public class AuthService {
         return authMapper.toTokenResponse(newAccessToken, newRefreshToken, expiresIn);
     }
 
+    public void logout(RefreshRequest request) {
+        refreshTokenService.findValidRefreshToken(request.refreshToken()).ifPresent(refreshToken -> {
+            refreshTokenService.revokeRefreshToken(refreshToken);
+            log.info("Logout bem-sucedido: userId={}", refreshToken.getUser().getId());
+        });
 
-    public void logout (RefreshRequest request) {
-        log.info("Tentativa de logout");
-
-        RefreshToken token = refreshTokenService.validateRefreshToken(request.refreshToken());
-        refreshTokenService.revokeRefreshToken(token);
-        log.info("Logout bem-sucedido: username={}", token.getUser().getName());
     }
-
-
 }
