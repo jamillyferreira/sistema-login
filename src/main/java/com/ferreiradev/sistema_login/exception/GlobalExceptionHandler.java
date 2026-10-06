@@ -116,4 +116,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("Erro de token: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceededException(RateLimitExceededException ex, WebRequest request) {
+        String path = ((ServletWebRequest) request).getRequest().getRequestURI();
+
+        ErrorResponse errorResponse = new ErrorResponse(
+          "about:blank",
+          HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+          HttpStatus.TOO_MANY_REQUESTS.value(),
+          ex.getMessage(),
+          path,
+          Instant.now()
+        );
+
+        log.warn("Rate limit excedido: {}, (path={})", ex.getMessage(), path);
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(errorResponse);
+    }
 }
