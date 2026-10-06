@@ -1,19 +1,23 @@
 package com.ferreiradev.sistema_login.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
@@ -32,32 +36,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                final String email = jwtService.getUsername(token);
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails user = userDetailsService.loadUserByUsername(email); // Busca o usuário no banco (UserDetailsServiceImpl)
 
-        final String token = authHeader.substring(7); // Pega o token do header
-        final String email = jwtService.getUsername(token); // Pega o username (email) do token
-
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Busca o usuário no banco (UserDetailsServiceImpl)
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-            // Se o token for valido
-            if (jwtService.isTokenValid(token, userDetails)) {
-                // Cria o usuário autenticado
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-
-                // Registrar IP e sessão
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Coloca o usuário autenticado no "bolso" no contexto do spring
-               SecurityContextHolder.getContext().setAuthentication(authToken);
+                    if (jwtService.isTokenValid(token, user)) { // Se o token for valido
+                        var authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()); // Cria o usuário autenticado
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); // Registrar IP
+                        // Coloca o usuário autenticado no "bolso" no contexto do spring
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+                }
+            } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
+                log.warn("Token JWT rejeitado: {}", e.getMessage());
+                SecurityContextHolder.clearContext();
             }
         }
         filterChain.doFilter(request, response);
