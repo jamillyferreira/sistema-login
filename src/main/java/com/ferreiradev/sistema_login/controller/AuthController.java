@@ -1,7 +1,8 @@
 package com.ferreiradev.sistema_login.controller;
 
+import com.ferreiradev.sistema_login.docs.AuthControllerDoc;
 import com.ferreiradev.sistema_login.dtos.request.*;
-import com.ferreiradev.sistema_login.dtos.response.ResetPasswordResponse;
+import com.ferreiradev.sistema_login.dtos.response.MessageResponse;
 import com.ferreiradev.sistema_login.dtos.response.UserResponse;
 import com.ferreiradev.sistema_login.dtos.response.TokenResponse;
 import com.ferreiradev.sistema_login.service.AuthService;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-public class AuthController {
+public class AuthController implements AuthControllerDoc {
 
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
@@ -45,17 +46,17 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ResetPasswordResponse> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
         passwordResetService.requestForgotPassword(request.email());
-        ResetPasswordResponse response = new ResetPasswordResponse(
+        MessageResponse response = new MessageResponse(
                 "Se o e-mail existir, um código de redefinição será enviado.");
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+    public ResponseEntity<MessageResponse> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         passwordResetService.resetPassword(request.code(), request.newPassword());
-        ResetPasswordResponse response = new ResetPasswordResponse("Senha redefinida com sucesso");
+        MessageResponse response = new MessageResponse("Senha redefinida com sucesso");
         return ResponseEntity.ok(response);
 
     }
