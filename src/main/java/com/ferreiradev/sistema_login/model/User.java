@@ -34,13 +34,17 @@ public class User implements UserDetails {
     private String password;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @CreationTimestamp
     private Instant createdAt;
 
     public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.password = password;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = Instant.now();
     }
 
     @Override
