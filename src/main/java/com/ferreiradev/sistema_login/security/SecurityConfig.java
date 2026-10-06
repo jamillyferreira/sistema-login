@@ -33,6 +33,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeConfig -> {
                     authorizeConfig.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll();
+                    authorizeConfig.requestMatchers("/v3/api-docs/**", "/scalar/**").permitAll();
                     authorizeConfig.requestMatchers("/api/auth/**").permitAll();
                     authorizeConfig.anyRequest().authenticated();
                 })
