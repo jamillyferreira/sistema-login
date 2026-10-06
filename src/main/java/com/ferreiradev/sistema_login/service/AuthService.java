@@ -48,7 +48,7 @@ public class AuthService {
 
         log.info("Usuário registrado com sucesso. id={}, email={}", savedUser.getId(), savedUser.getEmail());
 
-        return authMapper.toRegisterResponseDTO(savedUser);
+        return authMapper.toUserResponseDTO(savedUser);
     }
 
     public TokenResponse login(LoginRequest request) {
