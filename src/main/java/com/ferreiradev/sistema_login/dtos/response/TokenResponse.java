@@ -1,8 +1,10 @@
 package com.ferreiradev.sistema_login.dtos.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
+@Schema(description = "Resposta com tokens de autenticação")
 @Builder
 public record TokenResponse(
 
