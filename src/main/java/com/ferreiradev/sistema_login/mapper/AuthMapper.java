@@ -17,7 +17,7 @@ public class AuthMapper {
                 .build();
     }
 
-    public UserResponse toRegisterResponseDTO(User user) {
+    public UserResponse toUserResponseDTO(User user) {
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
