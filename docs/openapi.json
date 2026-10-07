@@ -1,0 +1,527 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Sistema de Login API",
+        "description": "API respons\u00e1vel pelo gerenciamento de autentica\u00e7\u00e3o e usu\u00e1rios",
+        "contact": {
+            "name": "Jamilly Ferreira",
+            "url": "https://github.com/jamillyferreira",
+            "email": "jamillyferreira.dev@gmail.com"
+        },
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Servidor de desenvolvimento"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Autentica\u00e7\u00e3o",
+            "description": "Endpoints de registro, login, logout e recupera\u00e7\u00e3o de senha"
+        },
+        {
+            "name": "Perfil do usu\u00e1rio",
+            "description": "Endpoints para consulta do perfil do usu\u00e1rio autenticado"
+        }
+    ],
+    "paths": {
+        "/api/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Autentica\u00e7\u00e3o"
+                ],
+                "summary": "Redefinir senha",
+                "description": "Redefine a senha usando o c\u00f3digo recebido por e-mail",
+                "operationId": "resetPassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResetPasswordRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Senha redefinida",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "C\u00f3digo inv\u00e1lido ou expirado",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/register": {
+            "post": {
+                "tags": [
+                    "Autentica\u00e7\u00e3o"
+                ],
+                "summary": "Registrar novo usu\u00e1rio",
+                "description": "Cria um novo usu\u00e1rio no sistema com e-mail e senha",
+                "operationId": "register",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usu\u00e1rio criado com sucesso",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Dados inv\u00e1lidos no corpo da requisi\u00e7\u00e3o",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "E-mail j\u00e1 cadastrado no sistema",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Autentica\u00e7\u00e3o"
+                ],
+                "summary": "Renovar token de acesso",
+                "description": "Gera um novo access token a partir de um refresh token v\u00e1lido",
+                "operationId": "refresh",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token renovado",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Dados inv\u00e1lidos no corpo da requisi\u00e7\u00e3o",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Refresh token inv\u00e1lido ou expirado",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Autentica\u00e7\u00e3o"
+                ],
+                "summary": "Realizar logout",
+                "description": "Invalida o refresh token do usu\u00e1rio",
+                "operationId": "logout",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "Logout realizado"
+                    },
+                    "401": {
+                        "description": "N\u00e3o autenticado",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Autentica\u00e7\u00e3o"
+                ],
+                "summary": "Fazer login",
+                "description": "Retorna o access token e refresh token do usu\u00e1rio",
+                "operationId": "login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login realizado com sucesso",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciais inv\u00e1lidas",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Autentica\u00e7\u00e3o"
+                ],
+                "summary": "Solicitar redefini\u00e7\u00e3o de senha",
+                "description": "Envia um c\u00f3digo de redefini\u00e7\u00e3o para o e-mail, se existir",
+                "operationId": "forgotPassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Solicita\u00e7\u00e3o processada",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/me": {
+            "get": {
+                "tags": [
+                    "Perfil do usu\u00e1rio"
+                ],
+                "summary": "Consultar perfil do usu\u00e1rio autenticado",
+                "description": "Retorna os dados do usu\u00e1rio logado com base no token JWT enviado no header Authorization",
+                "operationId": "me",
+                "responses": {
+                    "200": {
+                        "description": "Dados do usu\u00e1rio retornados com sucesso",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "N\u00e3o autenticado / token inv\u00e1lido",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ResetPasswordRequest": {
+                "type": "object",
+                "description": "Dados para redefinir a senha com o c\u00f3digo recebido por e-mail",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "C\u00f3digo de 6 d\u00edgitos recebido por e-mail",
+                        "maxLength": 6,
+                        "minLength": 6
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "description": "Nova senha do usu\u00e1rio (m\u00edn. 6 caracteres)",
+                        "maxLength": 2147483647,
+                        "minLength": 6
+                    }
+                },
+                "required": [
+                    "code",
+                    "new_password"
+                ]
+            },
+            "MessageResponse": {
+                "type": "object",
+                "description": "Resposta gen\u00e9rica de opera\u00e7\u00f5es de redefini\u00e7\u00e3o de senha",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "Mensagem informativa sobre o resultado da opera\u00e7\u00e3o"
+                    }
+                }
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "errors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "path": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "RegisterRequest": {
+                "type": "object",
+                "description": "Dados para registro de novo usu\u00e1rio",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Nome completo",
+                        "example": "Jamilly Ferreira",
+                        "minLength": 1
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "E-mail",
+                        "minLength": 1
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "Senha (m\u00edn. 6 caracteres)",
+                        "maxLength": 2147483647,
+                        "minLength": 6
+                    }
+                },
+                "required": [
+                    "email",
+                    "name",
+                    "password"
+                ]
+            },
+            "UserResponse": {
+                "type": "object",
+                "description": "Dados p\u00fablicos do usu\u00e1rio cadastrado",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identificador \u00fanico do usu\u00e1rio"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Nome completo do usu\u00e1rio"
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "E-mail do usu\u00e1rio"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Data e hora de cria\u00e7\u00e3o da conta"
+                    }
+                }
+            },
+            "RefreshRequest": {
+                "type": "object",
+                "description": "Dados para renova\u00e7\u00e3o do token de acesso",
+                "properties": {
+                    "refresh_token": {
+                        "type": "string",
+                        "description": "Refresh token obtido no login",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "refresh_token"
+                ]
+            },
+            "TokenResponse": {
+                "type": "object",
+                "description": "Resposta com tokens de autentica\u00e7\u00e3o",
+                "properties": {
+                    "access_token": {
+                        "type": "string"
+                    },
+                    "refresh_token": {
+                        "type": "string"
+                    },
+                    "token_type": {
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "LoginRequest": {
+                "type": "object",
+                "description": "Dados para login do usu\u00e1rio",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "E-mail do usu\u00e1rio",
+                        "example": "test@email.com",
+                        "minLength": 1
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "Senha do usu\u00e1rio",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "email",
+                    "password"
+                ]
+            },
+            "ForgotPasswordRequest": {
+                "type": "object",
+                "description": "Dados para solicitar redefini\u00e7\u00e3o de senha",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "E-mail cadastrado do usu\u00e1rio",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "email"
+                ]
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Insira o token JWT (sem o prefixo 'Bearer ')",
+                "name": "bearerAuth",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}
