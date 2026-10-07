@@ -37,3 +37,5 @@ jwt:
 logging:
   level:
     root: INFO
+scalar:
+  theme: purple
