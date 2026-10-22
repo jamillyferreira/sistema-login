@@ -59,11 +59,15 @@ public class RefreshTokenService {
 
     public int revokeAllForUser(User user) {
         int revoked = refreshTokenRepository.revokeAllByUserId(user.getId());
-        log.info("Regovados {} refresh tokens do usuário {}", revoked, user.getId());
+        log.info("Revogados {} refresh tokens do usuário {}", revoked, user.getId());
         return revoked;
     }
 
     public Optional<RefreshToken> findValidRefreshToken(String rawToken) {
+        if (rawToken == null || rawToken.isBlank())  {
+            return Optional.empty(); // sem token: trata como inválido, sem tentar gerar o hash
+        }
+
         String hashedToken = hashToken(rawToken);
         return refreshTokenRepository.findByTokenHash(hashedToken)
                 .filter(t -> !t.isRevoked())

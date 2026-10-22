@@ -1,10 +1,8 @@
 package com.ferreiradev.sistema_login.service;
 
 import com.ferreiradev.sistema_login.dtos.request.LoginRequest;
-import com.ferreiradev.sistema_login.dtos.request.RefreshRequest;
 import com.ferreiradev.sistema_login.dtos.request.RegisterRequest;
-import com.ferreiradev.sistema_login.dtos.response.UserResponse;
-import com.ferreiradev.sistema_login.dtos.response.TokenResponse;
+import com.ferreiradev.sistema_login.dtos.response.AuthResponse;
 import com.ferreiradev.sistema_login.exception.EmailAlreadyExistsException;
 import com.ferreiradev.sistema_login.mapper.AuthMapper;
 import com.ferreiradev.sistema_login.model.RefreshToken;
@@ -35,7 +33,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
 
 
-    public UserResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         log.info("Iniciando tentativa de registro: email={}", request.email());
         if (userRepository.existsByEmail(request.email())) {
             log.warn("Tentativa de registro com email já cadastrado: {}", request.email());
@@ -46,12 +44,16 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
 
-        log.info("Usuário registrado com sucesso. id={}, email={}", savedUser.getId(), savedUser.getEmail());
+        String token = jwtService.generateToken(savedUser);
+        String refreshToken = refreshTokenService.generateRefreshToken(savedUser);
+        long expiresIn = jwtService.getExpirationInSeconds();
 
-        return authMapper.toUserResponseDTO(savedUser);
+        log.info("Usuário registrado e logado com sucesso. id={}, email={}", savedUser.getId(), savedUser.getEmail());
+
+        return authMapper.toAuthResponse(token, refreshToken, expiresIn);
     }
 
-    public TokenResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         log.info("Tentativa de login: email={}", request.email());
 
         Authentication authentication = authenticationManager.authenticate(
@@ -69,14 +71,14 @@ public class AuthService {
         long expiresIn = jwtService.getExpirationInSeconds();
 
         log.info("Login bem-sucedido: id={}, username={}", user.getId(), user.getEmail());
-        return authMapper.toTokenResponse(token, refreshToken, expiresIn);
+        return authMapper.toAuthResponse(token, refreshToken, expiresIn);
     }
 
-    public TokenResponse refresh(RefreshRequest request) {
+    public AuthResponse refresh(String refreshToken) {
         log.info("Tentativa de refresh token");
 
         // busca refresh token antigo
-        RefreshToken oldRefreshToken = refreshTokenService.validateRefreshToken(request.refreshToken());
+        RefreshToken oldRefreshToken = refreshTokenService.validateRefreshToken(refreshToken);
 
         // pega usuario do refresh token
         User user = oldRefreshToken.getUser();
@@ -90,13 +92,13 @@ public class AuthService {
         long expiresIn = jwtService.getExpirationInSeconds();
 
         log.info("Refresh token bem-sucedido: id={}, username={}", user.getId(), user.getEmail());
-        return authMapper.toTokenResponse(newAccessToken, newRefreshToken, expiresIn);
+        return authMapper.toAuthResponse(newAccessToken, newRefreshToken, expiresIn);
     }
 
-    public void logout(RefreshRequest request) {
-        refreshTokenService.findValidRefreshToken(request.refreshToken()).ifPresent(refreshToken -> {
-            refreshTokenService.revokeRefreshToken(refreshToken);
-            log.info("Logout bem-sucedido: userId={}", refreshToken.getUser().getId());
+    public void logout(String refreshToken) {
+        refreshTokenService.findValidRefreshToken(refreshToken).ifPresent(token -> {
+            refreshTokenService.revokeRefreshToken(token);
+            log.info("Logout bem-sucedido: userId={}", token.getUser().getId());
         });
 
     }

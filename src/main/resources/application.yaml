@@ -34,6 +34,11 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: 600000 # Access token,  10min em ms
   refresh-expiration: 604800000 # Refresh token,  7 dias em ms
+
+app:
+  cookie:
+    secure: ${COOKIE_SECURE:false} # sem HTTPS (uso local). Em produção, trocar para true
+
 logging:
   level:
     root: INFO

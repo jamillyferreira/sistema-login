@@ -17,6 +17,7 @@ services:
       start_period: 40s
   api:
     build: .
+    image: ferrza/sistema-login:latest
     container_name: login_api
     restart: unless-stopped
     env_file:

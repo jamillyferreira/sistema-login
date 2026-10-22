@@ -2,7 +2,7 @@ package com.ferreiradev.sistema_login.mapper;
 
 import com.ferreiradev.sistema_login.dtos.request.RegisterRequest;
 import com.ferreiradev.sistema_login.dtos.response.UserResponse;
-import com.ferreiradev.sistema_login.dtos.response.TokenResponse;
+import com.ferreiradev.sistema_login.dtos.response.AuthResponse;
 import com.ferreiradev.sistema_login.model.User;
 import org.springframework.stereotype.Component;
 
@@ -26,8 +26,8 @@ public class AuthMapper {
                 .build();
     }
 
-    public TokenResponse toTokenResponse(String accessToken, String refreshToken, long expiresIn) {
-        return TokenResponse.builder()
+    public AuthResponse toAuthResponse(String accessToken, String refreshToken, long expiresIn) {
+        return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
@@ -35,4 +35,6 @@ public class AuthMapper {
                 .build();
 
     }
+
+
 }
