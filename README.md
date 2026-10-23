@@ -2,12 +2,31 @@
 
 API REST de autenticação construída com **Java 21** e **Spring Boot**, com JWT de curta duração, refresh token com rotação e recuperação de senha por e-mail.
 
+## Sumário
+
+- [Funcionalidades](#funcionalidades)
+- [Tecnologias](#tecnologias)
+- [Como executar](#como-executar)
+   - [Pré-requisitos](#pré-requisitos)
+   - [Configuração inicial](#configuração-inicial)
+   - [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Documentação da API](#documentação-da-api)
+- [Endpoints](#endpoints)
+- [Rate limit](#rate-limit)
+- [Fluxo de recuperação de senha](#fluxo-de-recuperação-de-senha)
+- [Decisões de segurança](#decisões-de-segurança)
+- [Banco de dados](#banco-de-dados)
+- [Próximos passos](#próximos-passos)
+- [Autora](#autora)
+
 ## Funcionalidades
 
-- Cadastro e login com senha criptografada (BCrypt)
-- Access token JWT de curta duração (10 minutos)
+- Cadastro e login com senha criptografada com BCrypt
+- Registro autentica automaticamente o usuário
+- Access token JWT de curta duração de 10 minutos no corpo da resposta
 - Refresh token opaco, guardado como hash, com **rotação** a cada uso e revogação
-- Logout que revoga o refresh token (idempotente)
+- Refresh token entregue em cookie `HttpOnly` (proteção contra XSS), com `SameSite=Strict` e `Path=/api/auth`
+- Logout que revoga o refresh token e limpa cookie (idempotente)
 - Recuperação de senha por e-mail, com código de 6 dígitos de uso único
 - Revogação de todas as sessões ativas ao redefinir a senha
 - Rate limit nos endpoints sensíveis (login, forgot-password e reset-password)
@@ -71,14 +90,16 @@ docker compose up -d
 
 ### Variáveis de ambiente
 
-| Variável            | Descrição                             |
-|---------------------|---------------------------------------|
-| `POSTGRES_DB`       | Nome do banco de dados                |
-| `POSTGRES_USER`     | Usuário do banco                      |
-| `POSTGRES_PASSWORD` | Senha do banco                        |
-| `JWT_SECRET`        | Chave de assinatura do JWT, em Base64 |
-| `MAIL_USERNAME`     | Conta Gmail que envia os e-mails      |
-| `MAIL_PASSWORD`     | Senha de app do Gmail                 |
+| Variável            | Descrição                                                            |
+|---------------------|----------------------------------------------------------------------|
+| `POSTGRES_DB`       | Nome do banco de dados                                               |
+| `POSTGRES_USER`     | Usuário do banco                                                     |
+| `POSTGRES_PASSWORD` | Senha do banco                                                       |
+| `JWT_SECRET`        | Chave de assinatura do JWT, em Base64                                |
+| `MAIL_USERNAME`     | Conta Gmail que envia os e-mails                                     |
+| `MAIL_PASSWORD`     | Senha de app do Gmail                                                |
+| `COOKIE_SECURE`     | `true` em produção (HTTPS), `false` em local (HTTP). Default: `false |
+
 
 Para gerar um `JWT_SECRET`:
 
@@ -113,18 +134,24 @@ A especificação OpenAPI completa está versionada em [`docs/openapi.json`](doc
 
 ## Endpoints
 
-| Método | Rota                        | Acesso      | Descrição                                                             |
-|--------|-----------------------------|-------------|-----------------------------------------------------------------------|
-| `POST` | `/api/auth/register`        | público     | Cria um usuário                                                       |
-| `POST` | `/api/auth/login`           | público     | Autentica e devolve access token e refresh token                      |
-| `POST` | `/api/auth/refresh`         | público     | Troca o refresh token por um novo par de tokens (o antigo é revogado) |
-| `POST` | `/api/auth/logout`          | público     | Revoga o refresh token enviado                                        |
-| `POST` | `/api/auth/forgot-password` | público     | Envia o código de redefinição por e-mail                              |
-| `POST` | `/api/auth/reset-password`  | público     | Redefine a senha usando o código recebido                             |
-| `GET`  | `/api/users/me`             | autenticado | Retorna os dados do usuário autenticado                               |
+| Método | Rota                        | Acesso      | Descrição                                 |
+|--------|-----------------------------|-------------|-------------------------------------------|
+| `POST` | `/api/auth/register`        | público     | Cria um usuário e autentica               |
+| `POST` | `/api/auth/login`           | público     | Autentica o usuário                       |
+| `POST` | `/api/auth/refresh`         | público     | Renova o par de tokens                    |
+| `POST` | `/api/auth/logout`          | público     | Revoga o refresh token enviado            |
+| `POST` | `/api/auth/forgot-password` | público     | Envia o código de redefinição por e-mail  |
+| `POST` | `/api/auth/reset-password`  | público     | Redefine a senha usando o código recebido |
+| `GET`  | `/api/users/me`             | autenticado | Retorna os dados do usuário autenticado   |
 
 As rotas autenticadas exigem o cabeçalho `Authorization: Bearer <access_token>`.
 Sem token, com token inválido, expirado ou de um usuário que não existe mais, a resposta é 401.
+
+**Sobre os tokens**: `/register` e `/login` devolvem o mesmo **AuthResponse** com o `access_token` no corpo e o 
+`refresh_token` apenas em cookie **HttpOnly** (Set-Cookie). O `refresh_token` não aparece no corpo, o frontend nunca 
+tem acesso a ele via JavaScript. Nas chamadas seguintes, o refresh usa o cookie automaticamente. `/logout` limpa o cookie com `Max-Age=0`.
+
+
 
 ### Exemplo: login
 
@@ -140,7 +167,6 @@ Resposta:
 ```json
 {
   "access_token": "eyJhbGciOi...",
-  "refresh_token": "3f1c9a52-...",
   "token_type": "Bearer",
   "expires_in": 600
 }
@@ -250,7 +276,8 @@ e o corpo segue o mesmo formato padronizado de erro:
 tratadas no próprio filtro e resultam em 401, em vez de estourar como erro interno
 
 **Refresh token**
-- Valor aleatório e opaco. No banco fica só o hash (SHA-256), e o valor original é entregue uma única vez ao cliente.
+- Valor aleatório e opaco. No banco fica só o hash (SHA-256), e o valor original é entregue **apenas via cookie 
+`HttpOnly`**, nunca no corpo da resposta.
 - Rotação: cada uso revoga o token anterior, então um token reutilizado é recusado.
 - Logout idempotente: repetir o logout, ou usar um token já inválido, responde `204` sem erro.
 
@@ -269,7 +296,7 @@ dificultando abuso de envio de e-mails e tentativas de adivinhar o códig
 
 O schema é versionado com Flywy (`src/main/resources/db/migration`), e o Hibernate roda com `ddl-auto: validate`, apenas conferindo se as entidades batem com as tabelas.
 
-| Tabla                   | Conteúdo                                                                      |
+| Tabela                  | Conteúdo                                                                      |
 |-------------------------|-------------------------------------------------------------------------------|
 | `users`                 | Usuários (chaves primárias UUID)                                              |
 | `refresh_tokens`        | Hash do refresh token, expiração, flag de revogação e usuário                 |
@@ -280,8 +307,6 @@ O schema é versionado com Flywy (`src/main/resources/db/migration`), e o Hibern
 
 - Guardar o código de redefinição como hash
 - Rate limit nos endpoints de recuperação de senha
-- Job agendado para limpar códigos expirados
-- Entregar o refresh token em cookie HttpOnly
 - Login com Google (OAuth2)
 - Testes automatizados
 
